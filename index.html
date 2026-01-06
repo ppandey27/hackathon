@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Team Members</title>
+<style>
+body {
+  font-family: 'Poppins', sans-serif;
+  background: #f2f6fc; /* light pastel background */
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.container {
+  background: #ffffff;
+  padding: 35px 40px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  max-width: 650px;
+  width: 100%;
+}
+
+.container h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #2c3e50;
+  font-size: 28px;
+  letter-spacing: 0.5px;
+}
+
+/* Team name input */
+#teamName {
+  background: #f9fbff;
+  border: 1px solid #cbd6e2;
+  border-radius: 12px;
+  padding: 14px 15px;
+  font-size: 16px;
+  width: 100%;
+  margin-bottom: 25px;
+  transition: 0.3s;
+}
+#teamName:focus {
+  border-color: #6c5ce7;
+  box-shadow: 0 0 6px rgba(108,92,231,0.3);
+  outline: none;
+}
+
+/* Member blocks */
+.member-block {
+  background: #f5f8ff;
+  border-radius: 15px;
+  padding: 20px 22px;
+  margin-bottom: 20px;
+  border-left: 6px solid #6c5ce7;
+}
+
+.member-block h4 {
+  margin: 0 0 15px 0;
+  color: #34495e;
+  font-size: 19px;
+  letter-spacing: 0.3px;
+}
+
+/* Member input fields with labels */
+.member-block label {
+  display: block;
+  margin: 6px 0 2px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+}
+
+.member-block input {
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  border: 1px solid #cbd6e2;
+  font-size: 15px;
+  transition: 0.3s;
+  background: #fff;
+}
+.member-block input:focus {
+  border-color: #6c5ce7;
+  box-shadow: 0 0 6px rgba(108,92,231,0.3);
+  outline: none;
+}
+
+.member-block input::placeholder {
+  color: #a0a8b9;
+  font-style: italic;
+}
+
+/* Button */
+button {
+  width: 100%;
+  padding: 15px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  background: #6c5ce7;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.3s;
+  margin-top: 10px;
+}
+button:hover {
+  background: #5a4ccf;
+  transform: translateY(-2px);
+}
+
+/* Responsive */
+@media(max-width:480px){
+  .container {padding: 20px;}
+  button, input {font-size: 14px;}
+  .member-block h4 {font-size:16px;}
+  .member-block label {font-size:13px;}
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+<h2>Add Team Members (Max 3)</h2>
+
+<input id="teamName" placeholder="Team Name">
+
+<!-- Member 1 -->
+<div class="member-block">
+<h4>Member 1</h4>
+<label for="name1">Name</label>
+<input id="name1" placeholder="Enter full name">
+<label for="contact1">Contact</label>
+<input id="contact1" placeholder="Phone number">
+<label for="email1">Email</label>
+<input id="email1" placeholder="Email address">
+<label for="position1">Position</label>
+<input id="position1" placeholder="Role/Position">
+</div>
+
+<!-- Member 2 -->
+<div class="member-block">
+<h4>Member 2</h4>
+<label for="name2">Name</label>
+<input id="name2" placeholder="Enter full name">
+<label for="contact2">Contact</label>
+<input id="contact2" placeholder="Phone number">
+<label for="email2">Email</label>
+<input id="email2" placeholder="Email address">
+<label for="position2">Position</label>
+<input id="position2" placeholder="Role/Position">
+</div>
+
+<!-- Member 3 -->
+<div class="member-block">
+<h4>Member 3</h4>
+<label for="name3">Name</label>
+<input id="name3" placeholder="Enter full name">
+<label for="contact3">Contact</label>
+<input id="contact3" placeholder="Phone number">
+<label for="email3">Email</label>
+<input id="email3" placeholder="Email address">
+<label for="position3">Position</label>
+<input id="position3" placeholder="Role/Position">
+</div>
+
+<button onclick="addTeamMembers()">Add Team</button>
+<br><br><br>
+<a href="getData.html">Show Teams</a>
+
+</div>
+
+<script>
+const URL="https://script.google.com/macros/s/AKfycbzuCJkJmmQJ6h2N36n7T9PcY52ScZgX3u6C_fEQrDwHLD8Vy0OmH8tkKJE961PofZCGWQ/exec";
+
+function addTeamMembers(){
+  const teamName = document.getElementById("teamName").value.trim();
+  if(!teamName) return alert("Team Name is required");
+
+  let members = [];
+  for(let i=1;i<=3;i++){
+    let name = document.getElementById("name"+i).value.trim();
+    if(name){ 
+      members.push({
+        name: name,
+        contact: document.getElementById("contact"+i).value.trim(),
+        email: document.getElementById("email"+i).value.trim(),
+        position: document.getElementById("position"+i).value.trim()
+      });
+    }
+  }
+
+  if(members.length===0) return alert("Please enter at least 1 member");
+
+  let count = 0;
+  members.forEach(member=>{
+    let payload = {
+      action: "add",
+      teamName: teamName,
+      name: member.name,
+      contact: member.contact,
+      email: member.email,
+      position: member.position
+    };
+    fetch(URL,{method:"POST", body:JSON.stringify(payload)})
+    .then(res=>res.text())
+    .then(msg=>{
+      count++;
+      if(count===members.length){
+        alert("All members added successfully!");
+        document.getElementById("teamName").value="";
+        for(let i=1;i<=3;i++){
+          ["name","contact","email","position"].forEach(f=>{
+            document.getElementById(f+i).value="";
+          });
+        }
+      }
+    });
+  });
+}
+</script>
+
+</body>
+</html>

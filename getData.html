@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>View Team Members</title>
+<style>
+/* Basic Reset */
+body, html {margin:0; padding:0; font-family: 'Poppins', sans-serif; background:#f2f6fc;}
+
+/* Container */
+.container {
+  max-width: 1000px;
+  margin: 20px auto;
+  background: #fff;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+}
+
+/* Heading */
+h2 {text-align:center; color:#2c3e50; margin-bottom:25px;}
+
+/* Search Inputs */
+.search {
+  display:grid;
+  grid-template-columns: repeat(auto-fit,minmax(180px,1fr));
+  gap:15px;
+  margin-bottom:20px;
+}
+.search input, .search button {
+  padding:12px 15px;
+  font-size:15px;
+  border-radius:10px;
+  border:1px solid #cbd6e2;
+  transition:0.3s;
+}
+.search input:focus {
+  border-color:#6c5ce7;
+  outline:none;
+  box-shadow:0 0 6px rgba(108,92,231,0.3);
+}
+.search button {
+  background:#6c5ce7;
+  color:#fff;
+  border:none;
+  cursor:pointer;
+  font-weight:bold;
+}
+.search button:hover {background:#5a4ccf;}
+
+/* Table */
+.table-wrapper {overflow-x:auto;}
+table {
+  width:100%;
+  border-collapse:collapse;
+  min-width:600px;
+}
+th, td {
+  border:1px solid #ddd;
+  padding:12px 10px;
+  text-align:left;
+  font-size:14px;
+}
+th {
+  background:#6c5ce7;
+  color:#fff;
+  font-weight:500;
+}
+tr:nth-child(even){background:#f9f9f9;}
+
+/* Buttons */
+.edit-btn, .delete-btn {
+  padding:6px 12px;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
+  font-size:13px;
+}
+.edit-btn {background:#ffc107; color:#fff;}
+.edit-btn:hover {background:#e0a800;}
+.delete-btn {background:#dc3545; color:#fff;}
+.delete-btn:hover {background:#c82333;}
+
+/* Content editable highlight */
+td[contenteditable="true"] {
+  background:#fff3cd;
+  border-radius:4px;
+  padding:8px;
+}
+
+/* Responsive */
+@media(max-width:768px){
+  .search {grid-template-columns:1fr 1fr 1fr;}
+  th, td {font-size:13px; padding:10px 8px;}
+}
+@media(max-width:480px){
+  .container {padding:20px;}
+  th, td {font-size:12px; padding:8px 5px;}
+  .search {grid-template-columns:1fr 1fr; gap:10px;}
+  .search input, .search button {padding:10px; font-size:12px;}
+  .edit-btn, .delete-btn {font-size:11px; padding:5px 8px;}
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+<h2>View Team Members</h2>
+
+<div class="search">
+<input id="teamName" placeholder="Team Name">
+<input id="count" type="number" min="1" max="3" placeholder="Members (1-3)">
+<button onclick="getData()">Show</button>
+</div>
+
+<div id="output" class="table-wrapper"></div>
+</div>
+
+<script>
+const URL="https://script.google.com/macros/s/AKfycbzuCJkJmmQJ6h2N36n7T9PcY52ScZgX3u6C_fEQrDwHLD8Vy0OmH8tkKJE961PofZCGWQ/exec";
+
+let currentList = [];
+
+function getData(){
+  const team = document.getElementById("teamName").value.trim();
+  const memberCount = parseInt(document.getElementById("count").value);
+  if(!team) return alert("Please enter team name");
+  if(!memberCount || memberCount<1) return alert("Please enter members count");
+
+  fetch(URL)
+  .then(r => r.json())
+  .then(data => {
+    let list = data.filter(d => d.team.toLowerCase()===team.toLowerCase());
+    currentList = list;
+    if(list.length===0){ output.innerHTML="<p>No data found</p>"; return;}
+
+    let html = `<table>
+      <tr><th>#</th><th>Name</th><th>Contact</th><th>Email</th><th>Position</th><th>Action</th></tr>`;
+
+    for(let i=0;i<memberCount && i<list.length;i++){
+      html += `<tr data-id="${list[i].id}" id="row-${i}">
+        <td>${i+1}</td>
+        <td contenteditable="false" id="name-${i}">${list[i].name}</td>
+        <td contenteditable="false" id="contact-${i}">${list[i].contact}</td>
+        <td contenteditable="false" id="email-${i}">${list[i].email}</td>
+        <td contenteditable="false" id="position-${i}">${list[i].position}</td>
+        <td>
+          <button class="edit-btn" onclick="editMember(${i})">Edit</button>
+          <button class="delete-btn" onclick="deleteMember(${i})">Delete</button>
+        </td>
+      </tr>`;
+    }
+
+    html += "</table>";
+    output.innerHTML = html;
+  });
+}
+
+function editMember(i){
+  let row = document.getElementById(`row-${i}`);
+  let id = row.getAttribute("data-id");
+  let editBtn = row.querySelector('.edit-btn');
+  let isEditing = editBtn.innerText==="Save";
+
+  if(!isEditing){
+    ["name","contact","email","position"].forEach(f=>row.querySelector(`#${f}-${i}`).contentEditable=true);
+    editBtn.innerText="Save";
+    editBtn.style.background="#28a745";
+  } else {
+    let payload={
+      action:"edit",
+      id:id,
+      teamName:document.getElementById("teamName").value,
+      name:row.querySelector(`#name-${i}`).innerText,
+      contact:row.querySelector(`#contact-${i}`).innerText,
+      email:row.querySelector(`#email-${i}`).innerText,
+      position:row.querySelector(`#position-${i}`).innerText
+    };
+    fetch(URL,{method:"POST", body:JSON.stringify(payload)})
+    .then(res=>{alert("Member updated in Google Sheet!"); getData();});
+
+    editBtn.innerText="Edit";
+    editBtn.style.background="#ffc107";
+  }
+}
+
+function deleteMember(i){
+  if(!confirm("Are you sure to delete this member?")) return;
+  let row = document.getElementById(`row-${i}`);
+  let id = row.getAttribute("data-id");
+  let payload={action:"delete",id:id};
+  fetch(URL,{method:"POST", body:JSON.stringify(payload)})
+  .then(res=>{alert("Member deleted from Google Sheet!"); getData();});
+}
+</script>
+
+</body>
+</html>
